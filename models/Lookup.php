@@ -15,37 +15,31 @@ use Yii;
  */
 class Lookup extends \yii\db\ActiveRecord
 {
-    /**
-     * {@inheritdoc}
-     */
-    public static function tableName()
+    private static $_items=array();
+
+    public static function items($type)
     {
-        return '{{%lookup}}';
+        if(!isset(self::$_items[$type]))
+            self::loadItems($type);
+        return self::$_items[$type];
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    public function rules()
+    public static function item($type,$code)
     {
-        return [
-            [['name', 'code', 'type', 'position'], 'required'],
-            [['code', 'position'], 'integer'],
-            [['name', 'type'], 'string', 'max' => 128],
-        ];
+        if(!isset(self::$_items[$type]))
+            self::loadItems($type);
+        return isset(self::$_items[$type][$code]) ? self::$_items[$type][$code] : false;
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    public function attributeLabels()
+    private static function loadItems($type)
     {
-        return [
-            'id' => 'ID',
-            'name' => 'Name',
-            'code' => 'Code',
-            'type' => 'Type',
-            'position' => 'Position',
-        ];
+        self::$_items[$type]=array();
+        $models=self::model()->findAll(array(
+            'condition'=>'type=:type',
+            'params'=>array(':type'=>$type),
+            'order'=>'position',
+        ));
+        foreach($models as $model)
+            self::$_items[$type][$model->code]=$model->name;
     }
 }

@@ -2,7 +2,8 @@
 
 namespace app\models;
 
-use Yii;
+use yii\db\ActiveRecord;
+use yii\web\IdentityInterface;
 
 /**
  * This is the model class for table "{{%user}}".
@@ -15,49 +16,40 @@ use Yii;
  *
  * @property Post[] $posts
  */
-class User extends \yii\db\ActiveRecord
+class User extends \yii\db\ActiveRecord implements IdentityInterface
 {
-    /**
-     * {@inheritdoc}
-     */
-    public static function tableName()
+    public static function findIdentity($id)
     {
-        return '{{%user}}';
+        return static::findOne($id);
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    public function rules()
+    public static function findByUsername($username)
     {
-        return [
-            [['username', 'password', 'email'], 'required'],
-            [['profile'], 'string'],
-            [['username', 'password', 'email'], 'string', 'max' => 128],
-        ];
+        return static::findOne(['username' => $username]);
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    public function attributeLabels()
+    public function getId()
     {
-        return [
-            'id' => 'ID',
-            'username' => 'Username',
-            'password' => 'Password',
-            'email' => 'Email',
-            'profile' => 'Profile',
-        ];
+        return $this->id;
     }
 
-    /**
-     * Gets query for [[Posts]].
-     *
-     * @return \yii\db\ActiveQuery
-     */
-    public function getPosts()
+    public function getAuthKey()
     {
-        return $this->hasMany(Post::className(), ['author_id' => 'id']);
+
+    }
+
+    public function validateAuthKey($authKey)
+    {
+
+    }
+
+    public static function findIdentityByAccessToken($token, $type = null)
+    {
+
+    }
+
+    public function validatePassword($password)
+    {
+        return \Yii::$app->security->validatePassword($password, $this->password);
     }
 }

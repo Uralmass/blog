@@ -20,6 +20,10 @@ use Yii;
  */
 class Comment extends \yii\db\ActiveRecord
 {
+    const STATUS_PENDING=1;
+    const STATUS_APPROVED=2;
+
+
     /**
      * {@inheritdoc}
      */

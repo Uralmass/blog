@@ -18,7 +18,7 @@ use yii\widgets\ActiveForm;
 
     <?= $form->field($model, 'tags')->textarea(['rows' => 6]) ?>
 
-    <?= $form->field($model, 'status')->textInput() ?>
+    <?= $form->field($model, 'status')->dropDownList('PostStatus')) ?>
 
     <?= $form->field($model, 'create_time')->textInput() ?>
 

@@ -21,6 +21,10 @@ use Yii;
  */
 class Post extends \yii\db\ActiveRecord
 {
+    const STATUS_DRAFT=1;
+    const STATUS_PUBLISHED=2;
+    const STATUS_ARCHIVED=3;
+
     /**
      * {@inheritdoc}
      */
@@ -35,11 +39,14 @@ class Post extends \yii\db\ActiveRecord
     public function rules()
     {
         return [
-            [['title', 'content', 'status', 'author_id'], 'required'],
-            [['content', 'tags'], 'string'],
-            [['status', 'create_time', 'update_time', 'author_id'], 'integer'],
+            [['title', 'content', 'status'], 'required'],
             [['title'], 'string', 'max' => 128],
-            [['author_id'], 'exist', 'skipOnError' => true, 'targetClass' => User::className(), 'targetAttribute' => ['author_id' => 'id']],
+            ['status', 'in', 'range' => [1, 2, 3]],
+            array('tags', 'match', 'pattern'=>'/^[\w\s,]+$/',
+                'message'=>'В тегах можно использовать только буквы.'),
+            array('tags', 'normalizeTags'),
+
+            array('title, status', 'safe', 'on'=>'search'),
         ];
     }
 
@@ -78,5 +85,30 @@ class Post extends \yii\db\ActiveRecord
     public function getComments()
     {
         return $this->hasMany(Comment::className(), ['post_id' => 'id']);
+    }
+
+    public function normalizeTags($attribute,$params)
+    {
+        $this->tags=Tag::array2string(array_unique(Tag::string2array($this->tags)));
+    }
+
+    public function relations()
+    {
+        return array(
+            'author' => array(self::BELONGS_TO, 'User', 'author_id'),
+            'comments' => array(self::HAS_MANY, 'Comment', 'post_id',
+                'condition'=>'comments.status='.Comment::STATUS_APPROVED,
+                'order'=>'comments.create_time DESC'),
+            'commentCount' => array(self::STAT, 'Comment', 'post_id',
+                'condition'=>'status='.Comment::STATUS_APPROVED),
+        );
+    }
+
+    public function getUrl()
+    {
+        return Yii::app()->createUrl('post/view', array(
+            'id'=>$this->id,
+            'title'=>$this->title,
+        ));
     }
 }
